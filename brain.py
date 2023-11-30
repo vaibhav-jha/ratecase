@@ -193,7 +193,7 @@ def answer(question, files):
     for i, ans in enumerate(answers):
         print(f'{ans=}')
         ans_docs.append(Document(page_content=ans['answer'], metadata={"citation": ', '.join([y["citation"] for y in ans["documents"]]),
-                                                                           "pages": ', '.join([ans["documents"]["page"]]),
+                                                                           "pages": ', '.join([y["page"] for y in ans["documents"]]),
                                                                            "doc_num": i}))
 
     def format_answer_docs(docs):
