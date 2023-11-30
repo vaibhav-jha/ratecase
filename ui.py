@@ -123,7 +123,7 @@ if files:
         agent_response, sources = answer(prompt, files)
         agent_response = agent_response.replace("$", "\\$")
         with st.chat_message("ai"):
-            st.markdown(agent_response)
+            st.write(agent_response)
 
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "ai", "content": agent_response})

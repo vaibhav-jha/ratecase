@@ -40,7 +40,6 @@ defusedxml==0.7.1
 docopt==0.6.2
 duckdb==0.8.0
 duckduckgo-search==3.8.5
-entrypoints @ file:///Users/cbousseau/work/recipes/ci_py311/entrypoints_1677911798787/work
 executing==1.2.0
 fairscale==0.4.13
 faiss-cpu==1.7.4
@@ -106,7 +105,6 @@ langchain-core==0.0.7
 langsmith==0.0.67
 linkify-it-py==2.0.2
 llama-cpp-python==0.1.53
-lxml @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_bbjv2ox7t8/croot/lxml_1679646469466/work
 lz4==4.3.2
 markdown-it-py==2.2.0
 MarkupSafe==2.1.2
@@ -158,7 +156,6 @@ pyarrow==12.0.0
 pycparser==2.21
 pydantic==2.5.2
 pydantic_core==2.14.5
-pydeck==0.8.1b0
 pydub==0.25.1
 Pygments==2.15.1
 pygptj==2.0.3
