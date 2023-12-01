@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from parser import parse_pdf
 
@@ -22,6 +23,12 @@ def process_files(files):
 
 
 def store_temp(files):
+    try:
+        os.makedirs("./temp/user_uploaded/")
+    except FileExistsError:
+        # directory already exists
+        print("folder existed")
+
     for file in files:
         with open(f'./temp/user_uploaded/{file.name}', 'wb') as f:
             data = file.getbuffer()

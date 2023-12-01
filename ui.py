@@ -34,6 +34,8 @@ with st.sidebar:
     st.divider()
     summary_creativity = st.slider(label='Summary Creativity', value=5, min_value=0, max_value=100, step=5)
     summary_creativity = summary_creativity * 1.0 / 50 if summary_creativity > 0 else 0.05
+    st.divider()
+    summary_toggle = st.toggle(label="Generate Summary", value=True)
 
 
 # -----------------------------------------------------------
@@ -50,7 +52,13 @@ files = st.file_uploader(label='Upload Files', accept_multiple_files=True)
 if "summaries" not in st.session_state:
     st.session_state["summaries"] = {}
 
-st.session_state["summary_written"] = False
+if "comparison" not in st.session_state:
+    st.session_state["comparison"] = ""
+
+if "summary_written" not in st.session_state:
+    st.session_state["summary_written"] = False
+if "comparison_written" not in st.session_state:
+    st.session_state["comparison_written"] = False
 
 if "file_analyses" not in st.session_state:
     st.session_state.file_analyses = []
@@ -74,31 +82,37 @@ if files:
 
         # loop = get_or_create_eventloop() # For async
         # -----------------------
-        # for file in files:
-        #     with st.spinner(f'Analyzing {file.name}...'):
-        #         store_document(file.name)
-        #         summary = summarize(file.name, detail=summary_detail, creative=summary_creativity)
-        #         summary = summary.replace("$", "\\$")
-        #         st.session_state["summaries"][file.name] = summary
-        #     write_summary(file.name, summary)
-        #
-        # st.session_state["summary_written"] = True
+
+        if summary_toggle:
+            for file in files:
+                with st.spinner(f'Analyzing {file.name}...'):
+                    store_document(file.name)
+                    summary = summarize(file.name, detail=summary_detail, creative=summary_creativity)
+                    summary = summary.replace("$", "\\$")
+                    st.session_state["summaries"][file.name] = summary
+                write_summary(file.name, summary)
+
+            st.session_state["summary_written"] = True
         # ------------------------
         # with st.spinner(f"Analyzing {len(files)} documents.."):
         #     loop.run_until_complete(asyncio.gather(*st.session_state["summaries"]))
         #     loop.close()
 
-        # if len(files) > 1:
-        #     with st.spinner('Comparing Documents...'):
-        #         comparison = compare_summaries(st.session_state["summaries"])
-        #         # comparison = comparison.replace('-', '\\-')
-        #     with st.expander(f"Comparison"):
-        #         st.write(comparison)
+            if len(files) > 1:
+                with st.spinner('Comparing Documents...'):
+                    comparison = compare_summaries(st.session_state["summaries"])
+                    # comparison = comparison.replace('-', '\\-')
+                with st.expander(f"Comparison"):
+                    st.write(comparison)
+                st.session_state["comparison_written"] = True
 
-    # if not st.session_state.summary_written:
-    #     for file in files:
-    #         label = file.name
-    #         write_summary(label, st.session_state.summaries[file.name])
+    if not st.session_state.summary_written:
+        for file in files:
+            label = file.name
+            write_summary(label, st.session_state.summaries[file.name])
+        if not st.session_state.comparison_written:
+            with st.expander(f"Comparison"):
+                st.write(st.session_state.comparison)
 
     for text in st.session_state.file_analyses:
         st.markdown(text)

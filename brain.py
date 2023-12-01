@@ -192,9 +192,10 @@ def answer(question, files):
     ans_docs = []
     for i, ans in enumerate(answers):
         print(f'{ans=}')
-        ans_docs.append(Document(page_content=ans['answer'], metadata={"citation": ', '.join([y["citation"] for y in ans["documents"]]),
-                                                                           "pages": ', '.join([y["page"] for y in ans["documents"]]),
-                                                                           "doc_num": i}))
+        ans_docs.append(Document(page_content=ans['answer'],
+                                 metadata={"citation": ', '.join([y["citation"] for y in ans["documents"]]),
+                                           "pages": ', '.join([y["page"] for y in ans["documents"]]),
+                                           "doc_num": i}))
 
     def format_answer_docs(docs):
         template = "Document {doc_num} (filename: {citation}, pages: {pages}):\n{page_content}"
@@ -216,6 +217,6 @@ def answer(question, files):
 
     return final_answer, metadatas
 
+
 def answer_all(question, files):
     pass
-
