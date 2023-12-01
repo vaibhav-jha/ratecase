@@ -83,7 +83,7 @@ def store_document(filename):
 
 def get_retriever(filename):
     vs = store_document(filename)
-    return vs.as_retriever(lambda_mult=0.6, k=5)
+    return vs.as_retriever(lambda_mult=0.6, k=10)
 
 
 

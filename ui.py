@@ -99,6 +99,7 @@ if files:
             if len(files) > 1:
                 with st.spinner('Comparing Documents...'):
                     comparison = compare_summaries(st.session_state["summaries"])
+                    st.session_state["comparison"] = comparison
                     # comparison = comparison.replace('-', '\\-')
                 with st.expander(f"Comparison"):
                     st.write(comparison)
