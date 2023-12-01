@@ -55,10 +55,8 @@ if "summaries" not in st.session_state:
 if "comparison" not in st.session_state:
     st.session_state["comparison"] = ""
 
-if "summary_written" not in st.session_state:
-    st.session_state["summary_written"] = False
-if "comparison_written" not in st.session_state:
-    st.session_state["comparison_written"] = False
+st.session_state["summary_written"] = False
+st.session_state["comparison_written"] = False
 
 if "file_analyses" not in st.session_state:
     st.session_state.file_analyses = []
@@ -110,7 +108,7 @@ if files:
         for file in files:
             label = file.name
             write_summary(label, st.session_state.summaries[file.name])
-        if not st.session_state.comparison_written:
+        if not st.session_state.comparison_written and len(files) > 1:
             with st.expander(f"Comparison"):
                 st.write(st.session_state.comparison)
 
@@ -124,7 +122,7 @@ if files:
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message["content"].replace("$", "\\$"))
+            st.write(message["content"].replace("$", "\$"))
 
     # React to user input
     if prompt := st.chat_input("Ask anything.."):
@@ -132,8 +130,9 @@ if files:
         with st.chat_message("user"):
             st.markdown(prompt)
         # Add user message to chat history
-        agent_response, sources = answer(prompt, files)
-        agent_response = agent_response.replace("$", "\\$")
+        with st.spinner("Thinking"):
+            agent_response, sources = answer(prompt, files)
+            agent_response = agent_response.replace("$", "\\$")
 
         st.write(agent_response)
 
