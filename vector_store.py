@@ -12,7 +12,7 @@ def _read_file(filename, doc_type='pdf'):
     return loader.load()
 
 
-def _split_doc(doc: List[Document], chunk_chars=2000, overlap=50):
+def _split_doc(doc: List[Document], chunk_chars=1500, overlap=100):
     import unidecode
 
     pdf_contents = [(i.page_content, i.metadata) for i in doc]
