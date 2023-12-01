@@ -212,6 +212,10 @@ def answer(question, files):
             | StrOutputParser()
     )
 
-    final_answer = final_ans_chain.invoke("Outline the plans to improve technical infra.")
+    final_answer = final_ans_chain.invoke(question)
 
     return final_answer, metadatas
+
+def answer_all(question, files):
+    pass
+

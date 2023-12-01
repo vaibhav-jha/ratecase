@@ -9,7 +9,6 @@ from vector_store import store_document
 import time
 from ui_helper import inject_bootstrap, display_summary
 
-
 # -----------------------------------------------------------
 # APP Config
 st.set_page_config(layout="wide")
@@ -56,7 +55,6 @@ st.session_state["summary_written"] = False
 if "file_analyses" not in st.session_state:
     st.session_state.file_analyses = []
 
-
 if files:
     st.info(f'Files uploaded: {len(files)}')
 
@@ -64,8 +62,8 @@ if files:
     filenames = [file.name for file in files]
     summary_keys = st.session_state.summaries.keys()
     to_remove = set(summary_keys).difference(set(filenames))
-    st.session_state["summaries"] = {key: value for key, value in st.session_state["summaries"].items() if key not in to_remove}
-
+    st.session_state["summaries"] = {key: value for key, value in st.session_state["summaries"].items() if
+                                     key not in to_remove}
 
     # Check if files have changed
     if "files" not in st.session_state or st.session_state.files != files:
@@ -75,32 +73,32 @@ if files:
             store_temp(files)
 
         # loop = get_or_create_eventloop() # For async
-
-        for file in files:
-            with st.spinner(f'Analyzing {file.name}...'):
-                store_document(file.name)
-                summary = summarize(file.name, detail=summary_detail, creative=summary_creativity)
-                summary = summary.replace("$", "\\$")
-                st.session_state["summaries"][file.name] = summary
-            write_summary(file.name, summary)
-
-        st.session_state["summary_written"] = True
-
+        # -----------------------
+        # for file in files:
+        #     with st.spinner(f'Analyzing {file.name}...'):
+        #         store_document(file.name)
+        #         summary = summarize(file.name, detail=summary_detail, creative=summary_creativity)
+        #         summary = summary.replace("$", "\\$")
+        #         st.session_state["summaries"][file.name] = summary
+        #     write_summary(file.name, summary)
+        #
+        # st.session_state["summary_written"] = True
+        # ------------------------
         # with st.spinner(f"Analyzing {len(files)} documents.."):
         #     loop.run_until_complete(asyncio.gather(*st.session_state["summaries"]))
         #     loop.close()
 
-        if len(files) > 1:
-            with st.spinner('Comparing Documents...'):
-                comparison = compare_summaries(st.session_state["summaries"])
-                # comparison = comparison.replace('-', '\\-')
-            with st.expander(f"Comparison"):
-                st.write(comparison)
+        # if len(files) > 1:
+        #     with st.spinner('Comparing Documents...'):
+        #         comparison = compare_summaries(st.session_state["summaries"])
+        #         # comparison = comparison.replace('-', '\\-')
+        #     with st.expander(f"Comparison"):
+        #         st.write(comparison)
 
-    if not st.session_state.summary_written:
-        for file in files:
-            label = file.name
-            write_summary(label, st.session_state.summaries[file.name])
+    # if not st.session_state.summary_written:
+    #     for file in files:
+    #         label = file.name
+    #         write_summary(label, st.session_state.summaries[file.name])
 
     for text in st.session_state.file_analyses:
         st.markdown(text)
@@ -112,7 +110,7 @@ if files:
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"].replace("$", "\\$"))
+            st.write(message["content"].replace("$", "\\$"))
 
     # React to user input
     if prompt := st.chat_input("Ask anything.."):
@@ -122,8 +120,8 @@ if files:
         # Add user message to chat history
         agent_response, sources = answer(prompt, files)
         agent_response = agent_response.replace("$", "\\$")
-        with st.chat_message("ai"):
-            st.write(agent_response)
+
+        st.write(agent_response)
 
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "ai", "content": agent_response})
