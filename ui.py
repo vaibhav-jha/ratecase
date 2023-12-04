@@ -106,10 +106,9 @@ if files:
                 st.session_state["comparison_written"] = True
 
     if not st.session_state.summary_written:
-        for file in files:
-            label = file.name
-            write_summary(label, st.session_state.summaries[file.name])
-        if not st.session_state.comparison_written and len(files) > 1:
+        for label in st.session_state.summaries:
+            write_summary(label, st.session_state.summaries[label])
+        if not st.session_state.comparison_written and len(files) > 1 and 'comparison' in st.session_state:
             with st.expander(f"Comparison"):
                 st.write(st.session_state.comparison)
 

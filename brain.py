@@ -20,6 +20,8 @@ from vector_store import get_retriever
 from operator import itemgetter
 from langchain.schema.runnable import RunnableMap
 
+from watsonx_model import llm
+
 langsmith_config.set_env()
 
 
@@ -29,12 +31,12 @@ def _build_documents(filename):
     loader = PyPDFLoader(f"./temp/user_uploaded/{filename}")
     pages = loader.load()
 
+    token_threshold = 2000
+
     document = ""
     documents = []
-    counter = 0
 
     for page in pages[:20]:
-        counter += 1
         pno = page.metadata['page']
         content = page.page_content
         document += f"""Page {pno + 1}:
@@ -42,8 +44,7 @@ def _build_documents(filename):
 
 
         """
-        if counter == 5:
-            counter = 0
+        if llm.get_num_tokens(document) > token_threshold:
             documents.append(Document(page_content=document, metadata={"pages": f"{pno - 4}-{pno}"}))
             document = ""
     return documents
