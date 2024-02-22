@@ -20,7 +20,7 @@ from vector_store import get_retriever
 from operator import itemgetter
 from langchain.schema.runnable import RunnableMap
 
-from watsonx_model import llm
+# from GPT_Model import llm
 
 langsmith_config.set_env()
 
@@ -36,6 +36,9 @@ def _build_documents(filename):
     document = ""
     documents = []
 
+    prev_pno = 0
+    pno = len(pages)
+
     for page in pages[:20]:
         pno = page.metadata['page']
         content = page.page_content
@@ -45,8 +48,12 @@ def _build_documents(filename):
 
         """
         if llm.get_num_tokens(document) > token_threshold:
-            documents.append(Document(page_content=document, metadata={"pages": f"{pno - 4}-{pno}"}))
+            documents.append(Document(page_content=document, metadata={"pages": f"{prev_pno + 1}-{pno + 1}"}))
             document = ""
+            prev_pno = pno + 1
+
+    documents.append(Document(page_content=document, metadata={"pages": f"{prev_pno + 1}-{pno + 1}"}))
+
     return documents
 
 
@@ -96,6 +103,7 @@ def summarize(filename, detail=500, creative=0.35):
             config,
             token_max=3500,
     ):
+        print("I came here")
         collapse_ct = 1
         while get_num_tokens(docs) > token_max:
             config["run_name"] = f"Collapse {collapse_ct}"
@@ -112,6 +120,7 @@ def summarize(filename, detail=500, creative=0.35):
             | StrOutputParser()
     ).with_config(run_name="Reduce")
 
+    # print(map_as_doc_chain.map())
     # The final full chain
     map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain).with_config(
         run_name="Map reduce"
