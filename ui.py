@@ -28,7 +28,9 @@ st.divider()
 # SIDEBAR
 with st.sidebar:
     model_to_use = st.radio(horizontal=True, label='Select Model',
-                            options={'llama-2-70b-chat': 'llama', 'gpt-3.5': 'gpt'})
+                            options={'llama-2-70b-chat': 'llama', 'gpt-3.5': 'gpt3', 'gpt-4': 'gpt4', 'claude3': 'claude3'},
+                            index=2)
+
     st.divider()
     summary_detail = st.slider(label='Summary level of detail', value=800, min_value=100, max_value=1600, step=100)
     st.divider()

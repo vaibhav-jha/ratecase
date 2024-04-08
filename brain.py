@@ -8,9 +8,9 @@ from langchain.schema import format_document, StrOutputParser
 from langchain.schema import Document
 
 from utils import get_or_create_eventloop
-from watsonx_model import get_summary_llm, llm
+from watsonx_model import get_summary_llm, llm_ibm
 from prompts import summary_prompt, reduce_prompt, collapse_prompt, comparison_prompt_template, ans_prompt_template, \
-    final_ans_prompt_template
+    final_ans_prompt_template, basic_qa_prompt
 
 from langchain.chains.combine_documents import collapse_docs, split_list_of_docs
 from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
@@ -27,17 +27,18 @@ langsmith_config.set_env()
 
 # --------------------------SUMMARY GENERATION-------------------------------------
 
-def _build_documents(filename):
+def _build_documents_legacy(filename, llm, token_threshold=2000):
     loader = PyPDFLoader(f"./temp/user_uploaded/{filename}")
     pages = loader.load()
-
-    token_threshold = 2000
 
     document = ""
     documents = []
 
     prev_pno = 0
     pno = len(pages)
+
+    if len(pages) > 50:
+        pages = pages[:50]
 
     for page in pages[:20]:
         pno = page.metadata['page']
@@ -47,7 +48,7 @@ def _build_documents(filename):
 
 
         """
-        if llm.get_num_tokens(document) > token_threshold:
+        if llm_ibm.get_num_tokens(document) > token_threshold:
             documents.append(Document(page_content=document, metadata={"pages": f"{prev_pno + 1}-{pno + 1}"}))
             document = ""
             prev_pno = pno + 1
@@ -57,10 +58,29 @@ def _build_documents(filename):
     return documents
 
 
-def summarize(filename, detail=500, creative=0.35):
-    documents = _build_documents(filename)
-    summary_llm = get_summary_llm(creative)
+def _build_documents(filename, llm, token_threshold=2000, legacy=True):
+    if legacy:
+        return _build_documents_legacy(filename, llm, token_threshold)
 
+    return _build_documents_legacy(filename, llm, token_threshold)
+    # loader = PyPDFLoader(f"./temp/user_uploaded/{filename}")
+    # pages = loader.load()
+
+
+def _get_summary_llm(model: str, creative: float):
+    if model.startswith("llama"):
+        return get_summary_llm(creative)
+    else:
+        from llms import CustomLLM
+        llm_obj = CustomLLM()
+        return llm_obj.get_llm(option=model, temperature=creative)
+
+
+def summarize(filename, detail=500, creative=0.35, model='gpt4'):
+    summary_llm = _get_summary_llm("claude3", creative)
+
+    documents = _build_documents(filename, summary_llm, token_threshold=150000)
+    print(f"Document length {len(documents)}")
     document_prompt = PromptTemplate.from_template("{page_content}")
     partial_format_document = partial(format_document, prompt=document_prompt)
     partial_format_wc = partial(format_document, prompt=PromptTemplate.from_template(f"{detail}"))
@@ -148,7 +168,7 @@ def compare_summaries(summaries):
 # --------------------------QUESTION TO VECTOR STORE-------------------------------------
 
 
-def answer(question, files):
+def answer_legacy(question, files):
     def format_retrieved_docs(docs):
         doc_prompt = PromptTemplate.from_template("Source: (filename: {citation}, pages: {page})\nText:{page_content}")
         partial_format_doc = partial(format_document, prompt=doc_prompt)
@@ -177,7 +197,7 @@ def answer(question, files):
                     "question": itemgetter("question"),
                 }
                 | PromptTemplate.from_template(ans_prompt_template)
-                | llm
+                | llm_ibm
                 | StrOutputParser()
         )
         rag_chain_with_source = RunnableMap(
@@ -188,8 +208,6 @@ def answer(question, files):
                                         x["documents"]],
                                     "answer": rag_chain_from_docs,
                                 }
-
-        # rag_chain_with_source.invoke("What is Task Decomposition")
 
         answers.append(prompt_llm(rag_chain_with_source, question))
 
@@ -219,13 +237,57 @@ def answer(question, files):
     final_ans_chain = (
             {"answers": lambda x: formatted_answer_docs, "question": RunnablePassthrough()}
             | PromptTemplate.from_template(final_ans_prompt_template)
-            | llm
+            | llm_ibm
             | StrOutputParser()
     )
 
     final_answer = final_ans_chain.invoke(question)
 
     return final_answer, metadatas
+
+
+def _choose_model(model='claude3'):
+    if model.startswith("llama"):
+        return llm_ibm
+    else:
+        from llms import CustomLLM
+        llm_obj = CustomLLM()
+        return llm_obj.get_llm(option=model)
+
+
+def answer(question, files, legacy=False, model='claude3'):
+    llm = _choose_model(model)
+
+    if legacy:
+        return answer_legacy(question, files)
+
+    # load all content into context
+    def format_retrieved_docs(docs):
+        doc_prompt = PromptTemplate.from_template("Source: (filename: {citation}, pages: {page})\nText:{page_content}")
+        partial_format_doc = partial(format_document, prompt=doc_prompt)
+        return "\n\n".join(partial_format_doc(doc) for doc in docs)
+
+    context = ""
+
+    for file in files:
+        filename = file.name
+        filepath = f"./temp/user_uploaded/{filename}"
+
+        print(f"{filepath=}")
+
+        from langchain.document_loaders import PDFPlumberLoader
+
+        loader = PDFPlumberLoader(filepath)
+
+        context += f"Document Name: {filename}\n"
+        for page in loader.load():
+            context += f"Page: {page.metadata['page']}\n"
+            context += f"Content: \n{page.page_content}\n\n"
+
+    prompt = PromptTemplate.from_template(basic_qa_prompt)
+    chain = prompt | llm | StrOutputParser()
+
+    return chain.invoke({"context": context, "question": question}), None
 
 
 def answer_all(question, files):

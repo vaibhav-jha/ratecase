@@ -12,6 +12,13 @@ def _read_file(filename, doc_type='pdf'):
     return loader.load()
 
 
+def _get_token_count(page_content):
+    from llms import CustomLLM
+
+    llm = CustomLLM().get_llm(option='gpt3')
+    return llm.get_num_tokens((page_content))
+
+
 def _split_doc(doc: List[Document], chunk_chars=1500, overlap=100):
     import unidecode
 
@@ -42,10 +49,13 @@ def _split_doc(doc: List[Document], chunk_chars=1500, overlap=100):
             # pretty formatting of pages (e.g. 1-3, 4, 5-7)
             pg = "-".join([pages[0], pages[-1]])
 
+            num_tokens = _get_token_count(split[:chunk_chars])
+
             metadata.update(dict(
                 citation=citation,
                 dockey=key,
                 page=f"{citation} pages {pg}",
+                num_tokens=num_tokens,
             ))
             metadatas.append(metadata)
 
@@ -70,7 +80,7 @@ def _split_doc(doc: List[Document], chunk_chars=1500, overlap=100):
 def store_document(filename):
     collection_name = filename
     try:
-        vs = FAISS.load_local(f"./temp/faiss_index/{collection_name}", OpenAIEmbeddings())
+        vs = FAISS.load_local(f"./temp/faiss_index/{collection_name}", OpenAIEmbeddings(), allow_dangerous_deserialization=True)
         print("Loaded from local")
     except RuntimeError:
         print("Loading from docs")
