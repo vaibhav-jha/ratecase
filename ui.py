@@ -133,7 +133,7 @@ if files:
             st.markdown(prompt)
         # Add user message to chat history
         with st.spinner("Thinking"):
-            agent_response, sources = answer(prompt, files)
+            agent_response, sources = answer(prompt, files, legacy=True)
             agent_response = agent_response.replace("$", "\\$")
 
         st.write(agent_response)

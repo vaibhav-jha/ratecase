@@ -168,7 +168,7 @@ def compare_summaries(summaries):
 # --------------------------QUESTION TO VECTOR STORE-------------------------------------
 
 
-def answer_legacy(question, files):
+def answer_legacy(question, llm, files):
     def format_retrieved_docs(docs):
         doc_prompt = PromptTemplate.from_template("Source: (filename: {citation}, pages: {page})\nText:{page_content}")
         partial_format_doc = partial(format_document, prompt=doc_prompt)
@@ -197,7 +197,7 @@ def answer_legacy(question, files):
                     "question": itemgetter("question"),
                 }
                 | PromptTemplate.from_template(ans_prompt_template)
-                | llm_ibm
+                | llm
                 | StrOutputParser()
         )
         rag_chain_with_source = RunnableMap(
@@ -259,7 +259,7 @@ def answer(question, files, legacy=False, model='claude3'):
     llm = _choose_model(model)
 
     if legacy:
-        return answer_legacy(question, files)
+        return answer_legacy(question, llm, files)
 
     # load all content into context
     def format_retrieved_docs(docs):
