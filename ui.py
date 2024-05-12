@@ -140,3 +140,12 @@ if files:
 
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "ai", "content": agent_response})
+
+
+# from langchain.agents import initialize_agent
+#
+# initialize_agent()
+#
+# from langchain.agents import AgentExecutor, create_structured_chat_agent
+#
+# create_structured_chat_agent()
