@@ -6,4 +6,4 @@ COPY . .
 ENV LANGCHAIN_TRACING_V2=true
 ENV LANGCHAIN_PROJECT=ratecase_2024_mash
 EXPOSE 8501
-CMD ["streamlit", "run ui.py"]
+CMD ["streamlit run ui.py"]
