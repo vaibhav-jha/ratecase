@@ -6,4 +6,4 @@ COPY . .
 ENV LANGCHAIN_TRACING_V2=true
 ENV LANGCHAIN_PROJECT=ratecase_2024_mash
 EXPOSE 5000
-CMD ["python3", "__main__.py"]
+CMD ["python3", "streamlit run ui.py"]
